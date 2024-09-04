@@ -10,8 +10,8 @@ class Preview(CTkFrame):
         super().__init__(master, **kwargs)
 
         # Content
-        self.content = CTkLabel(self, text=value, font=("Inter", 13), wraplength=860, justify="left")
-        self.content.grid(row=0, column=0, padx="15px", pady="15px", sticky="ew")
+        self.content = CTkLabel(self, text=value, font=("Inter", 13), wraplength=840, justify="left")
+        self.content.grid(row=0, column=0, padx="15px", pady="15px", sticky="news")
         self.grid_rowconfigure(0, weight=1)
 
 class Visual(CTkFrame):
@@ -367,7 +367,8 @@ class Step2(CTkFrame):
             'dep_citizenship': self.sub2_citizenship.get()
         }
         
-        print(self.input_values)
+        global HE_client
+        test = HE_client.encrypt_data(self.input_values)
 
 class Step1(CTkFrame):
     def __init__(self, master, **kwargs):

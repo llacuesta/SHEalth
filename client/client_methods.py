@@ -3,6 +3,7 @@ import requests      # for sending http requests
 import json
 from random import randint
 from Pyfhel import Pyfhel, PyCtxt
+from datetime import date, datetime
 
 class HEClient(Pyfhel):
     def __init__(self):
@@ -48,6 +49,94 @@ class HEClient(Pyfhel):
                 print(f"Error occured: {res['message']}")
         else:
             print(f"Error occured: Status code {r.status_code}")
+
+    """ OPERATIONS """
+    def encrypt_data(self, user_data):
+        # encrypts and sends data from client to server
+        last_name = self.encrypt(np.array([ord(char) for char in user_data['last_name']], dtype=np.int64))
+        first_name = self.encrypt(np.array([ord(char) for char in user_data['first_name']], dtype=np.int64))
+        middle_name = self.encrypt(np.array([ord(char) for char in user_data['middle_name']], dtype=np.int64))
+        birthday = self.encrypt(np.array([ord(char) for char in user_data['birthday']], dtype=np.int64))
+        age = self.encrypt(np.array([self.calculate_age(user_data['birthday'])], dtype=np.int64))
+        birthplace = self.encrypt(np.array([ord(char) for char in user_data['birthplace']], dtype=np.int64))
+        income = self.encrypt(np.array([ord(char) for char in user_data['income']], dtype=np.int64))
+        sex = self.encrypt(np.array([ord(char) for char in user_data['sex']], dtype=np.int64))
+        civil = self.encrypt(np.array([ord(char) for char in user_data['civil']], dtype=np.int64))
+        citizenship = self.encrypt(np.array([ord(char) for char in user_data['citizenship']], dtype=np.int64))
+        dep_last_name = self.encrypt(np.array([ord(char) for char in user_data['dep_last_name']], dtype=np.int64))
+        dep_first_name = self.encrypt(np.array([ord(char) for char in user_data['dep_first_name']], dtype=np.int64))
+        dep_middle_name = self.encrypt(np.array([ord(char) for char in user_data['dep_middle_name']], dtype=np.int64))
+        dep_bday = self.encrypt(np.array([ord(char) for char in user_data['dep_bday']], dtype=np.int64))
+        dep_relationship = self.encrypt(np.array([ord(char) for char in user_data['dep_relationship']], dtype=np.int64))
+        dep_citizenship = self.encrypt(np.array([ord(char) for char in user_data['dep_citizenship']], dtype=np.int64))
+
+        # TODO: modify enc_data to use int on fields that apply
+        enc_data = {
+            'last_name': last_name.to_bytes(),
+            'first_name': first_name.to_bytes(),
+            'middle_name': middle_name.to_bytes(),
+            'birthday': birthday.to_bytes(),
+            'age': age.to_bytes(),
+            'birthplace': birthplace.to_bytes(),
+            'income': income.to_bytes(),
+            'sex': sex.to_bytes(),
+            'civil': civil.to_bytes(),
+            'citizenship': citizenship.to_bytes(),
+            'dep_last_name': dep_last_name.to_bytes(),
+            'dep_first_name': dep_first_name.to_bytes(),
+            'dep_middle_name': dep_middle_name.to_bytes(),
+            'dep_bday': dep_bday.to_bytes(),
+            'dep_relationship': dep_relationship.to_bytes(),
+            'dep_citizenship': dep_citizenship.to_bytes(),
+        }
+
+        # sending data to server
+        self.send_data_to_server(enc_data)
+
+        # returning only some ciphertext bytes for preview
+        return enc_data['last_name']
+    
+    def send_data_to_server(self, data):
+        r = requests.post(
+            'http://127.0.0.1:5000/save-data',
+            json = {
+                "last_name": data['last_name'].decode('cp437'),
+                "first_name": data['first_name'].decode('cp437'),
+                "middle_name": data['middle_name'].decode('cp437'),
+                "birthday": data['birthday'].decode('cp437'),
+                "age": data['age'].decode('cp437'),
+                "birthplace": data['birthplace'].decode('cp437'),
+                "income": data['income'].decode('cp437'),
+                "sex": data['sex'].decode('cp437'),
+                "civil": data['civil'].decode('cp437'),
+                "citizenship": data['citizenship'].decode('cp437'),
+                "dependent": {
+                    "last_name": data['dep_last_name'].decode('cp437'),
+                    "first_name": data['dep_first_name'].decode('cp437'),
+                    "middle_name": data['dep_middle_name'].decode('cp437'),
+                    "bday": data['dep_bday'].decode('cp437'),
+                    "relationship": data['dep_relationship'].decode('cp437'),
+                    "citizenship": data['dep_citizenship'].decode('cp437'),
+                }
+            }
+        )
+
+        # handling server response
+        if r.status_code == 200:
+            res = json.loads(r.text)
+            if (res['success']):
+                print("Data saved successfully.")
+            else:
+                print(f"Error occured: {res['message']}")
+        else:
+            print(f"Error occured: Status code {r.status_code}")
+    
+    """ UTILS """
+    def calculate_age(self, birthday):
+        # calculates age of a user given a string of birthday
+        today = date.today()
+        dob = datetime.strptime(birthday, "%d/%m/%Y")
+        return today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
 
     """ DEBUGGING FUNCTIONS """
     def generate_test(self):
