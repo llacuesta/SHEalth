@@ -23,6 +23,7 @@ db = SQLAlchemy(app)
 class User(db.Model):
     __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True)
+    r_hash = db.Column(db.String(64), nullable=False)
     last_name = db.Column(db.LargeBinary(length=(2**24)-1), nullable=False)
     first_name = db.Column(db.LargeBinary(length=(2**24)-1), nullable=False) 
     middle_name = db.Column(db.LargeBinary(length=(2**24)-1), nullable=False)
@@ -35,7 +36,8 @@ class User(db.Model):
     citizenship = db.Column(db.LargeBinary(length=(2**24)-1), nullable=False)
     dependent = db.relationship('Dependent', backref="users", lazy=True, uselist=False) # dependent reference
 
-    def __init__(self, last_name, first_name, middle_name, birthday, age, birthplace, income, sex, civil, citizenship):
+    def __init__(self, r_hash, last_name, first_name, middle_name, birthday, age, birthplace, income, sex, civil, citizenship):
+        self.r_hash = r_hash
         self.last_name = last_name
         self.first_name = first_name
         self.middle_name = middle_name
@@ -51,6 +53,7 @@ class User(db.Model):
 class Dependent(db.Model):
     __tablename__ = "dependents"
     id = db.Column(db.Integer, primary_key=True)
+    r_hash = db.Column(db.String(64), nullable=False)
     last_name = db.Column(db.LargeBinary(length=(2**24)-1), nullable=False)
     first_name = db.Column(db.LargeBinary(length=(2**24)-1), nullable=False) 
     middle_name = db.Column(db.LargeBinary(length=(2**24)-1), nullable=False)
@@ -59,7 +62,8 @@ class Dependent(db.Model):
     citizenship = db.Column(db.LargeBinary(length=(2**24)-1), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False) # foreign key to user
 
-    def __init__(self, last_name, first_name, middle_name, birthday, relationship, citizenship, user_id):
+    def __init__(self, r_hash, last_name, first_name, middle_name, birthday, relationship, citizenship, user_id):
+        self.r_hash = r_hash
         self.last_name = last_name
         self.first_name = first_name
         self.middle_name = middle_name
@@ -104,6 +108,7 @@ def store_user_info():
 
     data = request.json
     try: 
+        user_hash = data.get('user_hash')
         last_name = data.get('last_name').encode('cp437')
         first_name = data.get('first_name').encode('cp437')
         middle_name = data.get('middle_name').encode('cp437')
@@ -117,6 +122,7 @@ def store_user_info():
 
         dependent_data = data.get('dependent')
         if dependent_data:
+            dep_hash = dependent_data.get('dep_hash')
             dep_last_name = dependent_data.get('last_name').encode('cp437')
             dep_first_name = dependent_data.get('first_name').encode('cp437')
             dep_middle_name = dependent_data.get('middle_name').encode('cp437')
@@ -125,12 +131,12 @@ def store_user_info():
             dep_citizenship = dependent_data.get('citizenship').encode('cp437')
 
             # adding user
-            new_user = User(last_name, first_name, middle_name, birthday, age, birthplace, income, sex, civil, citizenship)
+            new_user = User(user_hash, last_name, first_name, middle_name, birthday, age, birthplace, income, sex, civil, citizenship)
             db.session.add(new_user)
             db.session.commit() # commit add user
 
             # adding dependent
-            new_dependent = Dependent(dep_last_name, dep_first_name, dep_middle_name, dep_birthday, dep_relationship, dep_citizenship, new_user.id)
+            new_dependent = Dependent(dep_hash, dep_last_name, dep_first_name, dep_middle_name, dep_birthday, dep_relationship, dep_citizenship, new_user.id)
             db.session.add(new_dependent)
             db.session.commit()
         else:

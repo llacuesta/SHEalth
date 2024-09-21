@@ -1,6 +1,7 @@
 import numpy as np
 import requests      # for sending http requests
 import json
+import hashlib       # for sha-256
 from random import randint
 from Pyfhel import Pyfhel, PyCtxt
 from datetime import date, datetime
@@ -53,25 +54,30 @@ class HEClient(Pyfhel):
     """ OPERATIONS """
     def encrypt_data(self, user_data):
         # encrypts and sends data from client to server
-        last_name = self.encrypt(np.array([ord(char) for char in user_data['last_name']], dtype=np.int64))
-        first_name = self.encrypt(np.array([ord(char) for char in user_data['first_name']], dtype=np.int64))
-        middle_name = self.encrypt(np.array([ord(char) for char in user_data['middle_name']], dtype=np.int64))
-        birthday = self.encrypt(np.array([ord(char) for char in user_data['birthday']], dtype=np.int64))
-        age = self.encrypt(np.array([self.calculate_age(user_data['birthday'])], dtype=np.int64))
-        birthplace = self.encrypt(np.array([ord(char) for char in user_data['birthplace']], dtype=np.int64))
-        income = self.encrypt(np.array([ord(char) for char in user_data['income']], dtype=np.int64))
-        sex = self.encrypt(np.array([ord(char) for char in user_data['sex']], dtype=np.int64))
-        civil = self.encrypt(np.array([ord(char) for char in user_data['civil']], dtype=np.int64))
-        citizenship = self.encrypt(np.array([ord(char) for char in user_data['citizenship']], dtype=np.int64))
-        dep_last_name = self.encrypt(np.array([ord(char) for char in user_data['dep_last_name']], dtype=np.int64))
-        dep_first_name = self.encrypt(np.array([ord(char) for char in user_data['dep_first_name']], dtype=np.int64))
-        dep_middle_name = self.encrypt(np.array([ord(char) for char in user_data['dep_middle_name']], dtype=np.int64))
-        dep_bday = self.encrypt(np.array([ord(char) for char in user_data['dep_bday']], dtype=np.int64))
-        dep_relationship = self.encrypt(np.array([ord(char) for char in user_data['dep_relationship']], dtype=np.int64))
-        dep_citizenship = self.encrypt(np.array([ord(char) for char in user_data['dep_citizenship']], dtype=np.int64))
+        last_name = self.encrypt(np.frombuffer(user_data['last_name'].encode(), dtype=np.uint8))
+        first_name = self.encrypt(np.frombuffer(user_data['first_name'].encode(), dtype=np.uint8))
+        middle_name = self.encrypt(np.frombuffer(user_data['middle_name'].encode(), dtype=np.uint8))
+        birthday = self.encrypt(np.frombuffer(user_data['birthday'].encode(), dtype=np.uint8))
+        age = self.encrypt(np.array([self.calculate_age(user_data['birthday'])], dtype=np.uint8))
+        birthplace = self.encrypt(np.frombuffer(user_data['birthplace'].encode(), dtype=np.uint8))
+        income = self.encrypt(np.frombuffer(user_data['income'].encode(), dtype=np.uint8))
+        sex = self.encrypt(np.frombuffer(user_data['sex'].encode(), dtype=np.uint8))
+        civil = self.encrypt(np.frombuffer(user_data['civil'].encode(), dtype=np.uint8))
+        citizenship = self.encrypt(np.frombuffer(user_data['citizenship'].encode(), dtype=np.uint8))
+        dep_last_name = self.encrypt(np.frombuffer(user_data['dep_last_name'].encode(), dtype=np.uint8))
+        dep_first_name = self.encrypt(np.frombuffer(user_data['dep_first_name'].encode(), dtype=np.uint8))
+        dep_middle_name = self.encrypt(np.frombuffer(user_data['dep_middle_name'].encode(), dtype=np.uint8))
+        dep_bday = self.encrypt(np.frombuffer(user_data['dep_bday'].encode(), dtype=np.uint8))
+        dep_relationship = self.encrypt(np.frombuffer(user_data['dep_relationship'].encode(), dtype=np.uint8))
+        dep_citizenship = self.encrypt(np.frombuffer(user_data['dep_citizenship'].encode(), dtype=np.uint8))
+
+        # generating hashes
+        user_hash = hashlib.sha256(f"{user_data['last_name']}{user_data['first_name']}{user_data['middle_name']}".encode('utf-8')).hexdigest()
+        dep_hash = hashlib.sha256(f"{user_data['dep_last_name']}{user_data['dep_first_name']}{user_data['dep_middle_name']}".encode('utf-8')).hexdigest()
 
         # TODO: modify enc_data to use int on fields that apply
         enc_data = {
+            'user_hash': user_hash,
             'last_name': last_name.to_bytes(),
             'first_name': first_name.to_bytes(),
             'middle_name': middle_name.to_bytes(),
@@ -82,6 +88,7 @@ class HEClient(Pyfhel):
             'sex': sex.to_bytes(),
             'civil': civil.to_bytes(),
             'citizenship': citizenship.to_bytes(),
+            'dep_hash': dep_hash,
             'dep_last_name': dep_last_name.to_bytes(),
             'dep_first_name': dep_first_name.to_bytes(),
             'dep_middle_name': dep_middle_name.to_bytes(),
@@ -100,6 +107,7 @@ class HEClient(Pyfhel):
         r = requests.post(
             'http://127.0.0.1:5000/save-data',
             json = {
+                "user_hash": data['user_hash'],
                 "last_name": data['last_name'].decode('cp437'),
                 "first_name": data['first_name'].decode('cp437'),
                 "middle_name": data['middle_name'].decode('cp437'),
@@ -111,6 +119,7 @@ class HEClient(Pyfhel):
                 "civil": data['civil'].decode('cp437'),
                 "citizenship": data['citizenship'].decode('cp437'),
                 "dependent": {
+                    "dep_hash": data['dep_hash'],
                     "last_name": data['dep_last_name'].decode('cp437'),
                     "first_name": data['dep_first_name'].decode('cp437'),
                     "middle_name": data['dep_middle_name'].decode('cp437'),

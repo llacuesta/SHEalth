@@ -350,21 +350,21 @@ class Step2(CTkFrame):
 
     def getValues(self):
         self.input_values = {
-            'last_name': self.sub1_lastname.get(),
-            'first_name': self.sub1_firstname.get(),
-            'middle_name': self.sub1_middlename.get(),
-            'birthday': self.sub1_bday.get(),
-            'birthplace': self.sub1_placeofbrith.get(),
-            'income': self.sub1_income.get(),
-            'sex': self.sub1_sex_var.get(),
-            'civil': self.sub1_cs_var.get(),
-            'citizenship': self.sub1_ctz_var.get(),
-            'dep_last_name': self.sub2_lastname.get(),
-            'dep_first_name': self.sub2_firstname.get(),
-            'dep_middle_name': self.sub2_middlename.get(),
-            'dep_bday': self.sub2_bday.get(),
-            'dep_relationship': self.sub2_relationship.get(),
-            'dep_citizenship': self.sub2_citizenship.get()
+            'last_name': self.sub1_lastname.get().lower(),
+            'first_name': self.sub1_firstname.get().lower(),
+            'middle_name': self.sub1_middlename.get().lower(),
+            'birthday': self.sub1_bday.get().lower(),
+            'birthplace': self.sub1_placeofbrith.get().lower(),
+            'income': self.sub1_income.get().lower(),
+            'sex': self.sub1_sex_var.get().lower(),
+            'civil': self.sub1_cs_var.get().lower(),
+            'citizenship': self.sub1_ctz_var.get().lower(),
+            'dep_last_name': self.sub2_lastname.get().lower(),
+            'dep_first_name': self.sub2_firstname.get().lower(),
+            'dep_middle_name': self.sub2_middlename.get().lower(),
+            'dep_bday': self.sub2_bday.get().lower(),
+            'dep_relationship': self.sub2_relationship.get().lower(),
+            'dep_citizenship': self.sub2_citizenship.get().lower()
         }
         
         global HE_client
