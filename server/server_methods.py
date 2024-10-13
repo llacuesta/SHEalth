@@ -6,6 +6,20 @@ class HEServer(Pyfhel):
     def __init__(self):
         super().__init__()
 
+    """ SERVER FUNCTIONS """
+    # TODO: Count with a list of conditions
+    # might be an O(n) operation, check conditions per number of documents in db
+    # get all documents in db, iterate through each element if all conditions match
+    # return count to client
+
+    # TODO: Dependent lookup
+    # use user first and last name to generate new hash in client side
+    # use hash to query dependent in dependent table
+
+    # TODO: Decision tree for benefits
+        # TODO: create at least 15 documents in advance then generate a decision tree from those documents
+    # get document and all relevant fields
+
     """ SETUP FUNCTIONS """
     def generate_from_context(self, context, publicKey):
         # creating server instance

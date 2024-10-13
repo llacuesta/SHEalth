@@ -390,6 +390,26 @@ class Step1(CTkFrame):
         # Button
         self.bfvbutton = CTkButton(self, text="Generate BFV keys and send to server", font=("Inter", 13), height=35, corner_radius=10, border_width=1, fg_color="transparent", border_color="#000000", command=self.generateBFVKeys)
         self.bfvbutton.grid(row=3, column=0, pady=(10, 0), sticky="ew")
+
+        # Or
+        ortext = "Or"
+        self.ortext = CTkLabel(master=self, text=ortext, font=("Inter", 13), wraplength=900, justify="center")
+        self.ortext.grid(row=4, column=0, pady=(10, 0), sticky="news")
+
+        # File dialog buttons
+        self.context_button = CTkButton(self, text="Browse for Context File", font=("Inter", 13), height=35, corner_radius=10, border_width=1, fg_color="transparent", border_color="#000000", command=lambda: self.browseFile("context"))
+        self.context_button.grid(row=5, column=0, pady=(10, 0), sticky="ew")
+        self.key_button = CTkButton(self, text="Browse for Key File", font=("Inter", 13), height=35, corner_radius=10, border_width=1, fg_color="transparent", border_color="#000000", command=lambda: self.browseFile("key"))
+        self.key_button.grid(row=6, column=0, pady=(10, 0), sticky="ew")
+        self.secret_button = CTkButton(self, text="Browse for Secret Key File", font=("Inter", 13), height=35, corner_radius=10, border_width=1, fg_color="transparent", border_color="#000000", command=lambda: self.browseFile("secret"))
+        self.secret_button.grid(row=7, column=0, pady=(10, 0), sticky="ew")
+        self.upload_button = CTkButton(self, text="Upload Files", font=("Inter", 13), height=35, corner_radius=10, border_width=1, fg_color="transparent", border_color="#000000", command=self.uploadFiles)
+        self.upload_button.grid(row=8, column=0, pady=(20, 0), sticky="ew")
+
+        # Variables to hold file paths
+        self.context_file_path = None
+        self.key_file_path = None
+        self.secret_file_path = None
         
     """ GENERATION FUNCTIONS """
     def generateBGVKeys(self):
@@ -407,9 +427,12 @@ class Step1(CTkFrame):
         self.visual = Visual(self, label="Public Key", value=key[:1000], time=f"{execution_time:.6f}", border_width=1, border_color="#000000", corner_radius=10)
         self.visual.grid(row=2, column=0, pady=(20, 0), sticky="ew")
 
+        # Save button
+        self.save_button = CTkButton(self, text="Save Context and Keys", font=("Inter", 13), height=35, corner_radius=10, border_width=1, fg_color="transparent", border_color="#000000", command=self.saveFiles)
+        self.save_button.grid(row=3, column=0, pady=(20, 0), sticky="ew")
+
         # Hide button
-        self.hideButton(self.bgvbutton)
-        self.hideButton(self.bfvbutton)
+        self.clearScreen()
 
     def generateBFVKeys(self):
         global HE_client
@@ -426,14 +449,73 @@ class Step1(CTkFrame):
         self.visual = Visual(self, label="Public Key", value=key[:1000], time=f"{execution_time:.6f}", border_width=1, border_color="#000000", corner_radius=10)
         self.visual.grid(row=2, column=0, pady=(20, 0), sticky="ew")
 
+        # Save button
+        self.save_button = CTkButton(self, text="Save Context and Keys", font=("Inter", 13), height=35, corner_radius=10, border_width=1, fg_color="transparent", border_color="#000000", command=self.saveFiles)
+        self.save_button.grid(row=3, column=0, pady=(20, 0), sticky="ew")
+
         # Hide button
-        self.hideButton(self.bgvbutton)
-        self.hideButton(self.bfvbutton)
+        self.clearScreen()
+
+    # File browser function
+    def browseFile(self, file_type):
+        # Open file dialog to select a file
+        filepath = filedialog.askopenfilename(title=f"Select {file_type} file", filetypes=(("All files", "*.*"),))
+        if filepath:
+            if file_type == "context":
+                self.context_file_path = filepath
+                self.context_button.configure(text=f"Context: {filepath.split('/')[-1]}")
+            elif file_type == "key":
+                self.key_file_path = filepath
+                self.key_button.configure(text=f"Key: {filepath.split('/')[-1]}")
+            elif file_type == "secret":
+                self.secret_file_path = filepath
+                self.secret_button.configure(text=f"Secret: {filepath.split('/')[-1]}")
+
+    def uploadFiles(self):
+        # Load context
+        if self.context_file_path and self.key_file_path and self.secret_file_path:
+            global HE_client
+
+            # Recording time from loading to sending to server
+            start_time = time.time()
+            HE_client.load_keys(self.context_file_path, self.key_file_path, self.secret_file_path)
+            key = HE_client.to_bytes_public_key()
+
+            HE_client.send_context_to_server()
+            end_time = time.time()
+            execution_time = end_time - start_time
+
+            # Textarea
+            self.visual = Visual(self, label="Public Key", value=key[:1000], time=f"{execution_time:.6f}", border_width=1, border_color="#000000", corner_radius=10)
+            self.visual.grid(row=2, column=0, pady=(20, 0), sticky="ew")
+
+            # Remove all buttons and labels after upload
+            self.clearScreen()
+
+    def saveFiles(self):
+        # Directory to save files
+        save_dir = filedialog.askdirectory(title="Select Directory to Save Files")
+
+        if save_dir:
+            # Save context and keys to files
+            global HE_client
+            HE_client.save_keys(save_dir)
+
+            print(f"Context and keys saved in {save_dir}.")
 
     """ MISC FUNCTIONS """
     def hideButton(self, button):
         if button.winfo_viewable():
             button.grid_forget()
+
+    def clearScreen(self):
+        self.hideButton(self.bgvbutton)
+        self.hideButton(self.bfvbutton)
+        self.hideButton(self.context_button)
+        self.hideButton(self.key_button)
+        self.hideButton(self.secret_button)
+        self.hideButton(self.upload_button)
+        self.ortext.grid_forget()
 
 class Container(CTkScrollableFrame):
     def __init__(self, master, **kwargs):

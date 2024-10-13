@@ -2,6 +2,7 @@ import numpy as np
 import requests      # for sending http requests
 import json
 import hashlib       # for sha-256
+import os            # for saving
 from random import randint
 from Pyfhel import Pyfhel, PyCtxt
 from datetime import date, datetime
@@ -146,6 +147,18 @@ class HEClient(Pyfhel):
         today = date.today()
         dob = datetime.strptime(birthday, "%d/%m/%Y")
         return today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+    
+    def save_keys(self, save_dir):
+        # save into directory
+        self.save_context(os.path.join(save_dir, "context"))
+        self.save_public_key(os.path.join(save_dir, "pub.key"))
+        self.save_secret_key(os.path.join(save_dir, "sec.key"))
+    
+    def load_keys(self, c, k, s):
+        # load into pyfhel instance
+        self.load_context(c)
+        self.load_public_key(k)
+        self.load_secret_key(s)
 
     """ DEBUGGING FUNCTIONS """
     def generate_test(self):
