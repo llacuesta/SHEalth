@@ -5,7 +5,6 @@ import hashlib       # for sha-256
 import os            # for saving
 from random import randint
 from Pyfhel import Pyfhel, PyCtxt
-from datetime import date, datetime
 
 class HEClient(Pyfhel):
     def __init__(self):
@@ -59,7 +58,7 @@ class HEClient(Pyfhel):
         first_name = self.encrypt(np.frombuffer(user_data['first_name'].encode(), dtype=np.uint8))
         middle_name = self.encrypt(np.frombuffer(user_data['middle_name'].encode(), dtype=np.uint8))
         birthday = self.encrypt(np.frombuffer(user_data['birthday'].encode(), dtype=np.uint8))
-        age = self.encrypt(np.array([self.calculate_age(user_data['birthday'])], dtype=np.uint8))
+        age = self.encrypt(np.array([user_data['age']], dtype=np.uint8))
         birthplace = self.encrypt(np.frombuffer(user_data['birthplace'].encode(), dtype=np.uint8))
         income = self.encrypt(np.frombuffer(user_data['income'].encode(), dtype=np.uint8))
         sex = self.encrypt(np.frombuffer(user_data['sex'].encode(), dtype=np.uint8))
@@ -142,12 +141,6 @@ class HEClient(Pyfhel):
             print(f"Error occured: Status code {r.status_code}")
     
     """ UTILS """
-    def calculate_age(self, birthday):
-        # calculates age of a user given a string of birthday
-        today = date.today()
-        dob = datetime.strptime(birthday, "%d/%m/%Y")
-        return today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
-    
     def save_keys(self, save_dir):
         # save into directory
         self.save_context(os.path.join(save_dir, "context"))

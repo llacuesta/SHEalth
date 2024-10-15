@@ -22,6 +22,7 @@ db = SQLAlchemy(app)
 # defining user model
 class User(db.Model):
     __tablename__ = "users"
+    __table_args__ = (db.UniqueConstraint('r_hash'), )
     id = db.Column(db.Integer, primary_key=True)
     r_hash = db.Column(db.String(64), nullable=False)
     last_name = db.Column(db.LargeBinary(length=(2**24)-1), nullable=False)
@@ -60,7 +61,7 @@ class Dependent(db.Model):
     birthday = db.Column(db.LargeBinary(length=(2**24)-1), nullable=False)
     relationship = db.Column(db.LargeBinary(length=(2**24)-1), nullable=False)
     citizenship = db.Column(db.LargeBinary(length=(2**24)-1), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False) # foreign key to user
+    user_id = db.Column(db.String(64), db.ForeignKey('users.r_hash'), nullable=False) # foreign key to user
 
     def __init__(self, r_hash, last_name, first_name, middle_name, birthday, relationship, citizenship, user_id):
         self.r_hash = r_hash
@@ -136,7 +137,7 @@ def store_user_info():
             db.session.commit() # commit add user
 
             # adding dependent
-            new_dependent = Dependent(dep_hash, dep_last_name, dep_first_name, dep_middle_name, dep_birthday, dep_relationship, dep_citizenship, new_user.id)
+            new_dependent = Dependent(dep_hash, dep_last_name, dep_first_name, dep_middle_name, dep_birthday, dep_relationship, dep_citizenship, new_user.r_hash)
             db.session.add(new_dependent)
             db.session.commit()
         else:

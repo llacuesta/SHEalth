@@ -1,4 +1,5 @@
 import time
+from datetime import date, datetime
 from customtkinter import *
 from client_methods import *
 
@@ -127,7 +128,7 @@ class Step3(CTkFrame):
         self.sub1_income_frame.grid(row=2, column=2, sticky="ew")
         self.sub1_income_label = CTkLabel(self.sub1_income_frame, text="Income Bracket", font=("Inter", 13))
         self.sub1_income_label.grid(row=0, column=0, padx="20px", pady=(10, 5), sticky="nw")
-        self.sub1_income = CTkComboBox(self.sub1_income_frame, values=["PHP 10k below", "PHP 10k - 50k", "PHP 10k - 100k", "PHP 100k above"], font=("Inter", 13), height=40, corner_radius=10, border_width=1, border_color="#000000")
+        self.sub1_income = CTkComboBox(self.sub1_income_frame, values=["< PHP 10k", "PHP 10k - 49k", "PHP 50k - 100k", "> PHP 100k"], font=("Inter", 13), height=40, corner_radius=10, border_width=1, border_color="#000000")
         self.sub1_income.grid(row=1, column=0, padx=20, pady=(0, 20), sticky="ew")
         self.sub1_income_frame.grid_columnconfigure(0, weight=1)
 
@@ -270,7 +271,7 @@ class Step2(CTkFrame):
         self.sub1_income_frame.grid(row=2, column=2, sticky="ew")
         self.sub1_income_label = CTkLabel(self.sub1_income_frame, text="Income Bracket", font=("Inter", 13))
         self.sub1_income_label.grid(row=0, column=0, padx="20px", pady=(10, 5), sticky="nw")
-        self.sub1_income = CTkComboBox(self.sub1_income_frame, values=["PHP 10k below", "PHP 10k - 50k", "PHP 10k - 100k", "PHP 100k above"], font=("Inter", 13), height=40, corner_radius=10, border_width=1, border_color="#000000")
+        self.sub1_income = CTkComboBox(self.sub1_income_frame, values=["< PHP 10k", "PHP 10k - 49k", "PHP 50k - 100k", "> PHP 100k"], font=("Inter", 13), height=40, corner_radius=10, border_width=1, border_color="#000000")
         self.sub1_income.grid(row=1, column=0, padx=20, pady=(0, 20), sticky="ew")
         self.sub1_income_frame.grid_columnconfigure(0, weight=1)
 
@@ -339,21 +340,16 @@ class Step2(CTkFrame):
 
         # Button
         self.button = CTkButton(self, text="Encrypt input and send to server", font=("Inter", 13), height=35, corner_radius=10, border_width=1, fg_color="transparent", border_color="#000000", command=self.getValues)
-        self.button.grid(row=4, column=0, pady="20px", sticky="ew")
+        self.button.grid(row=4, column=0, pady=(20, 0), sticky="ew")
 
-        # Textarea
-        self.visual = Visual(self, label="Encrypted Input", value=desc, time="0.0002", border_width=1, border_color="#000000", corner_radius=10)
-        self.visual.grid(row=5, column=0, sticky="ew")
-
-    def encryptInput(self):
-        pass
-
+    """ ENCRYPT FUNCTION """
     def getValues(self):
         self.input_values = {
             'last_name': self.sub1_lastname.get().lower(),
             'first_name': self.sub1_firstname.get().lower(),
             'middle_name': self.sub1_middlename.get().lower(),
             'birthday': self.sub1_bday.get().lower(),
+            'age': self.calculate_age(self.sub1_bday.get().lower()),
             'birthplace': self.sub1_placeofbrith.get().lower(),
             'income': self.sub1_income.get().lower(),
             'sex': self.sub1_sex_var.get().lower(),
@@ -366,9 +362,25 @@ class Step2(CTkFrame):
             'dep_relationship': self.sub2_relationship.get().lower(),
             'dep_citizenship': self.sub2_citizenship.get().lower()
         }
-        
+
         global HE_client
-        test = HE_client.encrypt_data(self.input_values)
+
+        # Recording time from encryption to server save
+        start_time = time.time()
+        enc_data = HE_client.encrypt_data(self.input_values)
+        end_time = time.time()
+        execution_time = end_time - start_time
+
+        # Textarea
+        self.visual = Visual(self, label="Encrypted Input (Last Name only)", value=enc_data[:1000], time=f"{execution_time:.6f}", border_width=1, border_color="#000000", corner_radius=10)
+        self.visual.grid(row=5, column=0, pady=(20, 0), sticky="ew")
+
+    """ MISC FUNCTIONS """
+    def calculate_age(self, birthday):
+        # calculates age of a user given a string of birthday
+        today = date.today()
+        dob = datetime.strptime(birthday, "%d/%m/%Y")
+        return today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
 
 class Step1(CTkFrame):
     def __init__(self, master, **kwargs):
@@ -501,7 +513,7 @@ class Step1(CTkFrame):
             global HE_client
             HE_client.save_keys(save_dir)
 
-            print(f"Context and keys saved in {save_dir}.")
+            self.save_button.configure(f"Context and keys saved in {save_dir}.", state=DISABLED)
 
     """ MISC FUNCTIONS """
     def hideButton(self, button):

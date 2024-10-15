@@ -8,6 +8,10 @@ class HEServer(Pyfhel):
 
     """ SERVER FUNCTIONS """
     # TODO: Count with a list of conditions
+    # encrypt condiion
+    # scan all documents in db and compute homomorphic equality (subtract values and check if it returns 0)
+    # update counter then return count
+
     # might be an O(n) operation, check conditions per number of documents in db
     # get all documents in db, iterate through each element if all conditions match
     # return count to client
